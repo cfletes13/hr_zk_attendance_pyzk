@@ -7,7 +7,7 @@
         <field name="inherit_id" ref="hr_attendance.view_attendance_tree"/>
         <field name="arch" type="xml">
             <tree string="Employee attendances">
-                <field name="worked_hours" type="measure"/>
+                <field name="worked_hours" type="measure" widget="float_time"/>
             </tree>
         </field>
     </record>

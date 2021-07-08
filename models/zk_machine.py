@@ -16,23 +16,21 @@
 #
 ###################################################################################
 import pytz
-import sys
 from datetime import datetime
 import logging
-import binascii
 import os
 import platform
 import subprocess
-import time
 
 from odoo import api, fields, models
 from odoo import _
 from odoo.exceptions import UserError, ValidationError
 _logger = logging.getLogger(__name__)
 try:
-    from zk import ZK, const
+    from zk import ZK
 except ImportError:
     _logger.error("Unable to import pyzk library. Try 'pip3 install pyzk'.")
+
 
 class HrAttendance(models.Model):
     _inherit = 'hr.attendance'
@@ -42,7 +40,8 @@ class HrAttendance(models.Model):
 
 class ZkMachine(models.Model):
     _name = 'zk.machine'
-    
+    _description = 'ZK Machine'
+
     name = fields.Char(string='Machine IP', required=True)
     port_no = fields.Integer(string='Port No', required=True, default="4370")
     address_id = fields.Many2one('res.partner', string='Working Address')
@@ -60,18 +59,6 @@ class ZkMachine(models.Model):
             raise UserError("Connection To Device cannot be established.")
             return False
 
-    # @api.multi
-    # def device_connect(self, zkobj):
-    #     for i in range(10):
-    #         try:
-    #             conn =  zkobj.connect()
-    #             return conn
-    #         except:
-    #             _logger.info("zk.exception.ZKNetworkError: can't reach device.")
-    #             conn = False
-    #     return False
-
-
     @api.multi
     def try_connection(self):
         for r in self:
@@ -81,14 +68,14 @@ class ZkMachine(models.Model):
                 if response == 0:
                     raise UserError("Biometric Device is Up/Reachable.")
                 else:
-                    raise UserError("Biometric Device is Down/Unreachable.") 
+                    raise UserError("Biometric Device is Down/Unreachable.")
             else:
                 prog = subprocess.run(["ping", machine_ip], stdout=subprocess.PIPE)
                 if 'unreachable' in str(prog):
                     raise UserError("Biometric Device is Down/Unreachable.")
                 else:
-                    raise UserError("Biometric Device is Up/Reachable.")  
-    
+                    raise UserError("Biometric Device is Up/Reachable.")
+
     @api.multi
     def clear_attendance(self):
         for info in self:
@@ -99,7 +86,7 @@ class ZkMachine(models.Model):
                 try:
                     zk = ZK(machine_ip, port = zk_port , timeout=timeout, password=0, force_udp=False, ommit_ping=False)
                 except NameError:
-                    raise UserError(_("Pyzk module not Found. Please install it with 'pip3 install pyzk'."))                
+                    raise UserError(_("Pyzk module not Found. Please install it with 'pip3 install pyzk'."))
                 conn = self.device_connect(zk)
                 if conn:
                     conn.enable_device()
@@ -129,7 +116,7 @@ class ZkMachine(models.Model):
         machines = self.env['zk.machine'].search([])
         for machine in machines :
             machine.download_attendance()
-        
+
     @api.multi
     def download_attendance(self):
         _logger.info("++++++++++++Cron Executed++++++++++++++++++++++")
@@ -161,7 +148,7 @@ class ZkMachine(models.Model):
                         if info.zk_after_date == False:
                             tmp_zk_after_date = datetime.strptime('2000-01-01',"%Y-%m-%d")
                         else:
-                            tmp_zk_after_date = datetime.strptime(info.zk_after_date,'%Y-%m-%d %H:%M:%S')
+                            tmp_zk_after_date = info.zk_after_date
                         if atten_time != False and atten_time > tmp_zk_after_date:
                             local_tz = pytz.timezone(
                                 self.env.user.partner_id.tz or 'GMT')
@@ -220,4 +207,3 @@ class ZkMachine(models.Model):
                     conn.disconnect
             else:
                 raise UserError(_('Unable to connect to Attendance Device. Please use Test Connection button to verify.'))
-

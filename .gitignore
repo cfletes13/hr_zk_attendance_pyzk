@@ -1,0 +1,12 @@
+# dotfiles
+.*
+!/.gitignore
+
+# compiled python files
+*.py[c]
+
+# IDE helpers
+tags
+
+# VIM files
+*.vim

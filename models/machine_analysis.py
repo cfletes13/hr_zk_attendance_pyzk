@@ -17,7 +17,8 @@
 ###################################################################################
 from odoo import tools
 from odoo import models, fields, api, _
-from odoo.exceptions import UserError, ValidationError
+from odoo.exceptions import UserError
+
 
 class HrEmployee(models.Model):
     _inherit = 'hr.employee'
@@ -59,6 +60,7 @@ class ZkMachine(models.Model):
 
 class ReportZkDevice(models.Model):
     _name = 'zk.report.daily.attendance'
+    _description = 'ZK Report Daily Attendance'
     _auto = False
     _order = 'punching_day desc'
 
